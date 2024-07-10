@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRM Enquiry Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .chat-container {
+            width: 80%;
+            max-width: 800px; /* Adjust maximum width as needed */
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .messages {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            background-color: #fafafa;
+            white-space: pre-wrap; /* Ensures new lines are respected */
+            border-radius: 8px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .message.user {
+            background-color: #e1f5fe;
+            align-self: flex-end;
+        }
+        .message.bot {
+            background-color: #f0f0f0;
+            align-self: flex-start;
+        }
+        .input-group {
+            display: flex;
+            margin-top: 10px;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .input-group button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-size: 16px;
+        }
+        .input-group button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="messages" id="messages"></div>
+        <div class="input-group">
+            <input type="text" id="query" placeholder="Ask about a department...">
+            <button onclick="sendQuery()">Send</button>
+        </div>
+    </div>
+    <script>
+        function sendQuery() {
+            const query = document.getElementById('query').value;
+            if (query.trim() === "") return;
+
+            const userMessage = document.createElement('div');
+            userMessage.textContent = `You: ${query}`;
+            userMessage.classList.add('message', 'user');
+            document.getElementById('messages').appendChild(userMessage);
+
+            fetch('/enquire', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: query }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const botMessage = document.createElement('div');
+                botMessage.textContent = `Bot: ${data}`;
+                botMessage.classList.add('message', 'bot');
+                document.getElementById('messages').appendChild(botMessage);
+                document.getElementById('query').value = '';
+                document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const errorMessage = document.createElement('div');
+                errorMessage.textContent = `Bot: There was an error processing your request.`;
+                errorMessage.classList.add('message', 'bot');
+                document.getElementById('messages').appendChild(errorMessage);
+            });
+        }
+
+        document.getElementById('query').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendQuery();
+            }
+        });
+    </script>
+</body>
+</html>
